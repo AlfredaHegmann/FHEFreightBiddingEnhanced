@@ -1,0 +1,246 @@
+name: Test & Code Quality
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+
+jobs:
+  # ============================================================
+  # SMART CONTRACT TESTS
+  # ============================================================
+  contract-tests:
+    name: Smart Contract Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile contracts
+        run: npm run compile
+
+      - name: Run contract tests
+        run: npm test
+
+      - name: Generate coverage report
+        run: npm run coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: smart-contracts
+          name: contract-coverage-${{ matrix.node-version }}
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # ============================================================
+  # SOLIDITY LINTING
+  # ============================================================
+  solidity-lint:
+    name: Solidity Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Solhint
+        run: npm run lint:sol
+        continue-on-error: true
+
+      - name: Check contract sizes
+        run: npm run size
+        continue-on-error: true
+
+  # ============================================================
+  # TYPESCRIPT LINTING
+  # ============================================================
+  typescript-lint:
+    name: TypeScript Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: true
+
+      - name: Check formatting
+        run: npm run format:check
+        continue-on-error: true
+
+      - name: TypeScript type check
+        run: npm run type-check
+        continue-on-error: true
+
+  # ============================================================
+  # FRONTEND BUILD
+  # ============================================================
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: cd freight-bidding-platform && npm ci
+
+      - name: Build frontend
+        run: cd freight-bidding-platform && npm run build
+
+      - name: Frontend type check
+        run: cd freight-bidding-platform && npm run type-check
+
+  # ============================================================
+  # GAS REPORTING
+  # ============================================================
+  gas-report:
+    name: Gas Usage Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run gas reporter
+        run: REPORT_GAS=true npm test
+
+      - name: Comment PR with gas report
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            let gasReport = 'Gas report not generated';
+            try {
+              gasReport = fs.readFileSync('gas-report.txt', 'utf8');
+            } catch (e) {
+              gasReport = 'Gas report generation failed';
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ⛽ Gas Usage Report\n\n\`\`\`\n${gasReport}\n\`\`\``
+            });
+
+  # ============================================================
+  # SECURITY AUDIT
+  # ============================================================
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Run npm audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Check for outdated packages
+        run: npm outdated
+        continue-on-error: true
+
+  # ============================================================
+  # BUILD STATUS
+  # ============================================================
+  build-status:
+    name: Build Status
+    runs-on: ubuntu-latest
+    needs: [contract-tests, solidity-lint, typescript-lint, frontend-build]
+    if: always()
+
+    steps:
+      - name: Check build status
+        run: |
+          echo "Contract Tests: ${{ needs.contract-tests.result }}"
+          echo "Solidity Lint: ${{ needs.solidity-lint.result }}"
+          echo "TypeScript Lint: ${{ needs.typescript-lint.result }}"
+          echo "Frontend Build: ${{ needs.frontend-build.result }}"
+
+          if [[ "${{ needs.contract-tests.result }}" == "failure" ]]; then
+            echo "❌ Contract tests failed!"
+            exit 1
+          fi
+
+          if [[ "${{ needs.frontend-build.result }}" == "failure" ]]; then
+            echo "❌ Frontend build failed!"
+            exit 1
+          fi
+
+          echo "✅ All critical checks passed!"
