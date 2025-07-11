@@ -1,0 +1,15 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "contractName": "PrivateFreightBidding",
+  "contractAddress": "0x9E6B9F8afcC5A6E98A8d9967f2cA2edb3C191576",
+  "deployer": "0x621C4AD8EB851Cab0c929039259D0ff53104753d",
+  "deploymentTime": "2025-10-23T14:01:24.979Z",
+  "transactionHash": "0x4a990a16fd459214b7e0158c1a46adedfac98ff980cc9e061551c46e190c5529",
+  "blockNumber": 9473415,
+  "compiler": {
+    "version": "0.8.24",
+    "optimizer": true,
+    "runs": 200
+  }
+}
