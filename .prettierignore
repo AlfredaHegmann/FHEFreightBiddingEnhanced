@@ -1,0 +1,26 @@
+node_modules
+dist
+build
+coverage
+artifacts
+cache
+typechain-types
+deployments
+.next
+.vercel
+.env
+.env.local
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Artifacts
+*.tsbuildinfo
+
+# Build outputs
+out/
+.output/
+
+# Generated files
+*.min.js
+*.bundle.js
