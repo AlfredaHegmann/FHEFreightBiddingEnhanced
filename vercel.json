@@ -4,7 +4,35 @@
   "outputDirectory": "public",
   "installCommand": null,
   "devCommand": null,
+  "headers": [
+    {
+      "source": "/(.*\\.js)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.css)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/css"
+        }
+      ]
+    }
+  ],
   "routes": [
+    {
+      "src": "/app.js",
+      "dest": "/app.js"
+    },
+    {
+      "src": "/contracts/(.*)",
+      "dest": "/contracts/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "/index.html"
