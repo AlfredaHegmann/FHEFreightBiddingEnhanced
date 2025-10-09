@@ -1,4 +1,4 @@
-const CONTRACT_ADDRESS = "0x2E7B5f277595e3F1eeB9548ef654E178537cb90E";
+const CONTRACT_ADDRESS = "0x621C4AD8EB851Cab0c929039259D0ff53104753d";
 const CONTRACT_ABI = [
     "function owner() external view returns (address)",
     "function jobCounter() external view returns (uint256)",
