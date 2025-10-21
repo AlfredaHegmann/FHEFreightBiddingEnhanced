@@ -22,7 +22,6 @@ A privacy-preserving freight bidding marketplace powered by **Fully Homomorphic 
 
 **GitHub Repository**: [https://github.com/AlfredaHegmann/FHEFreightBiddingEnhanced](https://github.com/AlfredaHegmann/FHEFreightBiddingEnhanced)
 
-**Bounty Program**: [https://github.com/AlfredaHegmann/fhevm-react-template](https://github.com/AlfredaHegmann/fhevm-react-template)
 
 ---
 
@@ -610,8 +609,6 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 **GitHub Repository**: [https://github.com/AlfredaHegmann/FHEFreightBiddingEnhanced](https://github.com/AlfredaHegmann/FHEFreightBiddingEnhanced)
 
 **Smart Contract**: [0x2E7B5f277595e3F1eeB9548ef654E178537cb90E](https://sepolia.etherscan.io/address/0x2E7B5f277595e3F1eeB9548ef654E178537cb90E)
-
-**Bounty Program**: [https://github.com/AlfredaHegmann/fhevm-react-template](https://github.com/AlfredaHegmann/fhevm-react-template)
 
 **Zama FHEVM**: [https://docs.zama.ai/fhevm](https://docs.zama.ai/fhevm)
 
