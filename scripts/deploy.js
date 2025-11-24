@@ -1,126 +1,106 @@
-/**
- * Deploy script for Private Freight Bidding Platform
- *
- * Usage:
- *   npx hardhat run scripts/deploy.js --network localhost
- *   npx hardhat run scripts/deploy.js --network sepolia
- *   npx hardhat run scripts/deploy.js --network fhevmSepolia
- */
-
 const hre = require("hardhat");
 const fs = require("fs");
 const path = require("path");
 
+/**
+ * Deployment script for PrivacyPreservingMarketplace
+ * Supports multiple networks with automatic verification
+ */
 async function main() {
-  console.log("=================================================");
-  console.log("   Private Freight Bidding Platform Deployment");
-  console.log("=================================================\n");
+    console.log("=== Privacy-Preserving Marketplace Deployment ===\n");
 
-  // Get network information
-  const network = await hre.ethers.provider.getNetwork();
-  console.log(`Network: ${network.name}`);
-  console.log(`Chain ID: ${network.chainId}\n`);
+    const [deployer] = await hre.ethers.getSigners();
+    const network = hre.network.name;
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
 
-  // Get deployer account
-  const [deployer] = await hre.ethers.getSigners();
-  console.log(`Deploying contracts with account: ${deployer.address}`);
+    console.log(`Network: ${network}`);
+    console.log(`Chain ID: ${chainId}`);
+    console.log(`Deployer: ${deployer.address}`);
+    console.log(`Balance: ${hre.ethers.formatEther(await hre.ethers.provider.getBalance(deployer.address))} ETH\n`);
 
-  const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log(`Account balance: ${hre.ethers.formatEther(balance)} ETH\n`);
+    // Deploy contract
+    console.log("Deploying PrivacyPreservingMarketplace...");
+    const PrivacyPreservingMarketplace = await hre.ethers.getContractFactory(
+        "PrivacyPreservingMarketplace"
+    );
 
-  // Deploy PrivateFreightBidding contract
-  console.log("Deploying PrivateFreightBidding contract...");
-  const PrivateFreightBidding = await hre.ethers.getContractFactory("PrivateFreightBidding");
+    const marketplace = await PrivacyPreservingMarketplace.deploy();
+    await marketplace.waitForDeployment();
 
-  const deployStartTime = Date.now();
-  const contract = await PrivateFreightBidding.deploy();
-  await contract.waitForDeployment();
-  const deployEndTime = Date.now();
+    const contractAddress = await marketplace.getAddress();
+    console.log(`✓ Contract deployed to: ${contractAddress}`);
 
-  const contractAddress = await contract.getAddress();
-  console.log(`✓ Contract deployed to: ${contractAddress}`);
-  console.log(`Deployment time: ${(deployEndTime - deployStartTime) / 1000}s\n`);
+    // Get deployment transaction details
+    const deployTx = marketplace.deploymentTransaction();
+    const deployReceipt = await deployTx.wait();
 
-  // Get deployment transaction
-  const deployTx = contract.deploymentTransaction();
-  if (deployTx) {
-    console.log(`Deployment transaction hash: ${deployTx.hash}`);
-    const receipt = await deployTx.wait();
-    console.log(`Gas used: ${receipt.gasUsed.toString()}`);
-    console.log(`Block number: ${receipt.blockNumber}\n`);
-  }
+    console.log(`✓ Transaction hash: ${deployTx.hash}`);
+    console.log(`✓ Block number: ${deployReceipt.blockNumber}`);
+    console.log(`✓ Gas used: ${deployReceipt.gasUsed.toString()}\n`);
 
-  // Save deployment information
-  const deploymentInfo = {
-    network: network.name,
-    chainId: Number(network.chainId),
-    contractName: "PrivateFreightBidding",
-    contractAddress: contractAddress,
-    deployer: deployer.address,
-    deploymentTime: new Date().toISOString(),
-    transactionHash: deployTx?.hash || "",
-    blockNumber: deployTx ? (await deployTx.wait()).blockNumber : 0,
-    compiler: {
-      version: "0.8.24",
-      optimizer: true,
-      runs: 200
+    // Verify contract configuration
+    console.log("Verifying contract configuration...");
+    const timeout = await marketplace.DECRYPTION_TIMEOUT();
+    const maxPending = await marketplace.MAX_PENDING_REQUESTS();
+    const priceNoise = await marketplace.PRICE_NOISE_RANGE();
+
+    console.log(`  Decryption Timeout: ${timeout} seconds (${timeout / 3600} hours)`);
+    console.log(`  Max Pending Requests: ${maxPending}`);
+    console.log(`  Price Noise Range: ${priceNoise}\n`);
+
+    // Save deployment info
+    const deploymentsDir = path.join(__dirname, "..", "deployments");
+    if (!fs.existsSync(deploymentsDir)) {
+        fs.mkdirSync(deploymentsDir, { recursive: true });
     }
-  };
 
-  // Create deployments directory
-  const deploymentsDir = path.join(__dirname, "..", "deployments");
-  if (!fs.existsSync(deploymentsDir)) {
-    fs.mkdirSync(deploymentsDir, { recursive: true });
-  }
+    const deploymentInfo = {
+        network: network,
+        chainId: chainId.toString(),
+        contractName: "PrivacyPreservingMarketplace",
+        contractAddress: contractAddress,
+        deployer: deployer.address,
+        deployerBalance: hre.ethers.formatEther(await hre.ethers.provider.getBalance(deployer.address)),
+        transactionHash: deployTx.hash,
+        blockNumber: deployReceipt.blockNumber,
+        gasUsed: deployReceipt.gasUsed.toString(),
+        timestamp: new Date().toISOString(),
+        configuration: {
+            decryptionTimeout: timeout.toString(),
+            maxPendingRequests: maxPending.toString(),
+            priceNoiseRange: priceNoise.toString()
+        },
+        abi: marketplace.interface.format('json')
+    };
 
-  // Save deployment info to file
-  const deploymentFile = path.join(deploymentsDir, `${network.name}-deployment.json`);
-  fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
-  console.log(`Deployment info saved to: ${deploymentFile}\n`);
+    const deploymentFile = path.join(deploymentsDir, `${network}-deployment.json`);
+    fs.writeFileSync(deploymentFile, JSON.stringify(deploymentInfo, null, 2));
+    console.log(`✓ Deployment info saved to: ${deploymentFile}\n`);
 
-  // Display contract info
-  console.log("=================================================");
-  console.log("   Deployment Summary");
-  console.log("=================================================");
-  console.log(`Contract: PrivateFreightBidding`);
-  console.log(`Address: ${contractAddress}`);
-  console.log(`Network: ${network.name} (Chain ID: ${network.chainId})`);
-  console.log(`Deployer: ${deployer.address}`);
+    // Verification instructions
+    if (network !== "hardhat" && network !== "localhost") {
+        console.log("=== Contract Verification ===");
+        console.log("To verify on Etherscan, run:");
+        console.log(`npx hardhat verify --network ${network} ${contractAddress}\n`);
+    }
 
-  // Generate Etherscan link if on Sepolia
-  if (network.chainId === 11155111n) {
-    console.log(`\nEtherscan: https://sepolia.etherscan.io/address/${contractAddress}`);
-    console.log(`\n⚠️  Remember to verify the contract:`);
-    console.log(`   npx hardhat verify --network sepolia ${contractAddress}`);
-  }
+    console.log("=== Deployment Complete ===");
+    console.log(`Contract Address: ${contractAddress}`);
+    console.log(`Deployment File: ${deploymentFile}\n`);
 
-  console.log("\n=================================================");
-  console.log("   Next Steps");
-  console.log("=================================================");
-  console.log("1. Verify contract on Etherscan (if applicable):");
-  console.log(`   node scripts/verify.js ${contractAddress}`);
-  console.log("\n2. Interact with the contract:");
-  console.log(`   node scripts/interact.js ${contractAddress}`);
-  console.log("\n3. Run simulation:");
-  console.log(`   node scripts/simulate.js ${contractAddress}`);
-  console.log("=================================================\n");
-
-  return {
-    contract,
-    address: contractAddress,
-    deploymentInfo
-  };
+    return {
+        marketplace,
+        contractAddress,
+        deploymentInfo
+    };
 }
 
 // Execute deployment
-if (require.main === module) {
-  main()
+main()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error("\n❌ Deployment failed:");
-      console.error(error);
-      process.exit(1);
+        console.error("Deployment failed:", error);
+        process.exit(1);
     });
-}
 
-module.exports = { main };
+module.exports = main;
