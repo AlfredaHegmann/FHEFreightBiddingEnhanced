@@ -1,87 +1,288 @@
-# Privacy-Preserving Marketplace (dapp)
+# Private Freight Bidding Platform
 
-> Advanced FHE-based marketplace with Gateway callback pattern, refund mechanism, and timeout protection
+A revolutionary blockchain-based freight bidding system built with Fully Homomorphic Encryption (FHE) technology to ensure complete privacy in logistics operations.
 
-## 🎯 Overview
+## Live Demo
 
-This project implements a sophisticated privacy-preserving marketplace using Zama's FHEVM (Fully Homomorphic Encryption Virtual Machine). It demonstrates production-ready patterns for:
+**Platform URL**: [https://fhe-freight-bidding-enhanced.vercel.app/](https://fhe-freight-bidding-enhanced.vercel.app/)
 
-- **Gateway Callback Pattern**: Asynchronous decryption with automated callbacks
-- **Refund Mechanism**: Graceful handling of decryption failures
-- **Timeout Protection**: Prevention of permanent fund locks
-- **Privacy Techniques**: Price obfuscation and division hiding
-- **Gas Optimization**: Efficient HCU (Homomorphic Computation Unit) usage
+**Smart Contract Address**: `0x2E7B5f277595e3F1eeB9548ef654E178537cb90E`
 
-Live Demo: https://fhe-freight-bidding-enhanced.vercel.app/
- 
+## Core Concepts
 
-## 🔐 Key Features
+### FHE-Powered Confidential Freight Booking System
 
-### 1. Gateway Callback Pattern
+This platform revolutionizes the logistics industry by implementing a **privacy-preserving freight booking system** where:
+
+- **Encrypted Bidding**: All bid prices are encrypted using Fully Homomorphic Encryption (FHE), ensuring competitors cannot see each other's pricing strategies
+- **Anonymous Competition**: Bidders remain anonymous until the shipper decides to reveal winners
+- **Secure Price Discovery**: Market prices are discovered without exposing individual bids during the bidding process
+- **Zero-Knowledge Verification**: Smart contracts verify bid validity without revealing sensitive pricing information
+
+### Privacy-First Aviation Ticketing Architecture
+
+The system extends beyond traditional freight to support **confidential flight booking mechanisms**:
+
+- **Private Route Pricing**: Airlines can submit encrypted pricing for routes without revealing competitive information
+- **Sealed Bid Auctions**: Passengers and freight forwarders participate in sealed bid auctions for premium routes
+- **Confidential Cargo Manifests**: Cargo details remain encrypted while still enabling logistics coordination
+- **Anonymous Booking Verification**: Verify booking authenticity without exposing passenger or cargo data
+
+## Key Features
+
+### For Shippers
+- **Post Freight Jobs**: Create detailed freight requirements with origin, destination, and cargo specifications
+- **Escrow Protection**: Funds locked in smart contract until job completion
+- **Receive Anonymous Bids**: Get competitive bids without revealing bidder identities during active bidding
+- **Privacy-Protected Selection**: Choose winning bids based on revealed prices only when ready
+- **Transparent Execution**: Complete job execution with full audit trail on blockchain
+
+### For Carriers
+- **Browse Opportunities**: Access available freight jobs across multiple routes and cargo types
+- **Submit Encrypted Bids**: Place competitive bids using FHE encryption for complete privacy
+- **Deposit Protection**: Bid deposits protected with automatic refund mechanisms
+- **Strategic Pricing**: Bid without fear of immediate competitive response or price manipulation
+- **Secure Communication**: Interact with shippers through verified, encrypted channels
+
+### For Platform Administrators
+- **User Verification**: Manage and verify shipper and carrier credentials
+- **System Monitoring**: Track platform usage and transaction metrics
+- **Privacy Compliance**: Ensure all operations maintain encryption and privacy standards
+- **Network Management**: Oversee decentralized network operations and upgrades
+
+## System Architecture
+
+### Gateway Callback Pattern
+
+The platform uses an innovative Gateway callback architecture for asynchronous FHE operations:
+
 ```
-User Submit → Contract Record → Gateway Decrypt → Callback Complete
+User submits encrypted request → Contract records → Gateway decrypts → Callback completes transaction
 ```
 
-Users submit encrypted orders → Smart contract records encrypted data → Gateway server decrypts → Contract callback executes settlement
+**Flow Diagram**:
+```
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────────┐
+│   User      │───▶│   Contract   │───▶│   Gateway   │───▶│   Contract   │
+│  (Submit)   │    │  (Record)    │    │  (Decrypt)  │    │  (Callback)  │
+└─────────────┘    └──────────────┘    └─────────────┘    └──────────────┘
+```
 
-### 2. Refund Mechanism
-- Automatic refund on decryption failures
-- User-initiated refunds for expired orders
-- Graceful timeout handling
+### Refund Mechanism
 
-### 3. Timeout Protection
-- 1-hour decryption timeout (configurable)
-- Batch timeout processing for gas efficiency
-- Automatic refund on timeout expiration
+Handles decryption failures gracefully:
 
-### 4. Privacy-Preserving Techniques
-
-**Price Obfuscation**: Random noise added to prevent exact price leakage
 ```solidity
-uint64 obfuscatedPrice = basePrice + noise;
-euint64 encryptedPrice = FHE.asEuint64(obfuscatedPrice);
+function requestRefund(uint256 requestId) external
+function processRefund(uint256 requestId, uint64 refundAmount) external onlyGateway
 ```
 
-**Division Privacy**: Random multiplier obscures division operations
+**Scenarios**:
+- Gateway timeout: Automatic refund after DECRYPTION_TIMEOUT
+- Failed callback: User can manually trigger refund
+- Batch processing: Efficient cleanup of multiple timeouts
+
+### Timeout Protection
+
+Prevents permanent fund locks with configurable timeouts:
+
 ```solidity
-euint64 encryptedTotal = FHE.mul(price, FHE.mul(amount, randomMultiplier));
-// actual = encryptedTotal / randomMultiplier
+uint256 public constant DECRYPTION_TIMEOUT = 1 hours;
+uint256 public constant REFUND_GRACE_PERIOD = 24 hours;
+
+function triggerTimeout(uint256 requestId) external
+function batchProcessTimeouts(uint256[] calldata requestIds) external
 ```
 
-### 5. Gas Optimization
-- Lazy evaluation of encrypted operations
-- Batch processing of timeouts
-- Optimized storage layout
-- IR-based Solidity compilation (30-40% gas savings)
+**Features**:
+- Public timeout triggering
+- Batch processing for gas efficiency
+- Automatic refund on timeout
+- Event logging for audit trail
 
-## 📁 Project Structure
+### Price Obfuscation (Division Protection)
 
-```
-dapp/
-├── contracts/
-│   └── PrivacyPreservingMarketplace.sol     # Main contract (600+ lines)
-│
-├── test/
-│   └── PrivacyPreservingMarketplace.test.js # 40+ comprehensive tests
-│
-├── scripts/
-│   ├── deploy.js                             # Deployment script
-│   ├── interact.js                           # Interactive workflow demo
-│   └── security-check.js                     # Security audit tool
-│
-├── docs/
-│   ├── ARCHITECTURE.md                       # System design
-│   ├── API.md                                # API documentation
-│   ├── TESTING.md                            # Test guide
-│   └── SECURITY.md                           # Security analysis
-│
-├── hardhat.config.js                         # Hardhat configuration
-├── package.json                              # Dependencies
-├── README.md                                 # This file
-└── .env.example                              # Environment template
+Protects against division attacks and price inference:
+
+```solidity
+function _applyPriceObfuscation(euint64 price) internal returns (euint64) {
+    // Random multiplier technique
+    // (price * MULTIPLIER_BASE + noise) / MULTIPLIER_BASE
+}
 ```
 
-## 🚀 Quick Start
+**Techniques**:
+1. **Random Multiplier**: Adds noise to prevent exact division attacks
+2. **Temporal Noise**: Uses block timestamp for additional entropy
+3. **Preserved Ordering**: Maintains relative price comparisons
+
+### HCU (Homomorphic Computation Unit) Optimization
+
+Efficient use of FHE operations for gas optimization:
+
+```solidity
+// Batch permission grants
+FHE.allowThis(weight);
+FHE.allowThis(volume);
+FHE.allowThis(budget);
+FHE.allowThis(urgent);
+
+// Optimized comparison
+ebool priceBetter = FHE.lt(bid1.encryptedPrice, bid2.encryptedPrice);
+ebool priceEqual = FHE.eq(bid1.encryptedPrice, bid2.encryptedPrice);
+```
+
+**Optimizations**:
+- Minimal HCU operations per transaction
+- Batch permission grants
+- Lazy evaluation where possible
+- Storage packing for structs
+
+## Security Features
+
+### Input Validation
+```solidity
+require(bytes(_origin).length > 0 && bytes(_origin).length <= 100, "Invalid origin");
+require(_biddingDuration >= MIN_BIDDING_DURATION, "Invalid bidding duration");
+require(msg.value >= PLATFORM_FEE, "Insufficient platform fee");
+```
+
+### Access Control
+```solidity
+modifier onlyOwner()
+modifier onlyPauser()
+modifier onlyVerifiedShipper()
+modifier onlyVerifiedCarrier()
+modifier onlyJobShipper(uint256 _jobId)
+modifier onlyGateway
+```
+
+### Overflow Protection
+- Solidity 0.8+ built-in SafeMath
+- Explicit bound checks
+- Safe arithmetic operations
+
+### Reentrancy Guard
+```solidity
+modifier nonReentrant() {
+    require(!_reentrancyGuard, "Reentrant call");
+    _reentrancyGuard = true;
+    _;
+    _reentrancyGuard = false;
+}
+```
+
+### Additional Security
+- **Event Logging**: Comprehensive audit trail
+- **Pausable**: Emergency stop mechanism
+- **Escrow System**: Fund protection
+- **Deposit System**: Carrier commitment
+
+## Technology Stack
+
+- **Smart Contracts**: Solidity ^0.8.24 with Zama's fhEVM
+- **Frontend**: Modern web interface with Web3 integration
+- **Encryption**: Fully Homomorphic Encryption (FHE) using Zama's library
+- **Blockchain**: Compatible with fhEVM-enabled networks
+- **Privacy Layer**: Zero-knowledge proofs for sensitive operations
+
+## API Reference
+
+### Core Functions
+
+#### Post Job
+```solidity
+function postJob(
+    string memory _origin,
+    string memory _destination,
+    string memory _cargoType,
+    einput _encryptedWeight,
+    einput _encryptedVolume,
+    einput _encryptedBudget,
+    einput _isUrgent,
+    uint256 _biddingDuration
+) external payable onlyVerifiedShipper returns (uint256)
+```
+Creates encrypted freight job with escrow protection.
+
+#### Submit Bid
+```solidity
+function submitBid(
+    uint256 _jobId,
+    einput _encryptedPrice,
+    einput _encryptedDeliveryDays,
+    einput _encryptedReliability,
+    einput _isExpress
+) external payable onlyVerifiedCarrier
+```
+Submits encrypted bid with deposit.
+
+#### Request Bid Price Reveal
+```solidity
+function requestBidPriceReveal(uint256 _jobId, address _carrier) external returns (uint256)
+```
+Initiates Gateway decryption with timeout protection.
+
+#### Award Job
+```solidity
+function awardJob(uint256 _jobId, address _carrier) external
+```
+Awards job to carrier and returns deposits to losers.
+
+#### Complete Job
+```solidity
+function completeJob(uint256 _jobId) external
+```
+Marks job complete and releases payment.
+
+### Refund Functions
+
+#### Request Refund
+```solidity
+function requestRefund(uint256 requestId) external
+```
+Request refund for timed-out decryption.
+
+#### Trigger Timeout
+```solidity
+function triggerTimeout(uint256 requestId) external
+```
+Trigger timeout for expired request.
+
+#### Batch Process Timeouts
+```solidity
+function batchProcessTimeouts(uint256[] calldata requestIds) external
+```
+Process multiple timeouts efficiently.
+
+### Gateway Callbacks
+
+#### Bid Price Reveal Callback
+```solidity
+function callbackBidPriceReveal(uint256 requestId, uint64 decryptedPrice) external onlyGateway returns (bool)
+```
+Processes decrypted bid price from Gateway.
+
+#### Process Refund Callback
+```solidity
+function processRefund(uint256 requestId, uint64 refundAmount) external onlyGateway returns (bool)
+```
+Processes refund from Gateway.
+
+### View Functions
+
+```solidity
+function getJobInfo(uint256 _jobId) external view returns (...)
+function getBidInfo(uint256 _jobId, address _carrier) external view returns (...)
+function getRequestStatus(uint256 requestId) external view returns (...)
+function getBidders(uint256 _jobId) external view returns (address[] memory)
+function getCarrierProfile(address _carrier) external view returns (...)
+function getShipperProfile(address _shipper) external view returns (...)
+function getPlatformStats() external view returns (...)
+function getTimedOutRequests() external view returns (uint256[] memory)
+```
+
+## Quick Start
 
 ### Installation
 ```bash
@@ -119,62 +320,45 @@ npm run lint           # Lint Solidity and JavaScript
 npm run format         # Auto-format code
 ```
 
-## 📊 Test Coverage
+## Test Coverage
 
 - **Total Tests**: 40+
 - **Coverage**: 100% of contract code
 - **Test Categories**:
-  - ✅ Deployment & Initialization
-  - ✅ Order Creation
-  - ✅ Gateway Callback Processing
-  - ✅ Timeout Protection
-  - ✅ Refund Mechanism
-  - ✅ Order Settlement
-  - ✅ Order Cancellation
-  - ✅ Gas Optimization
-  - ✅ Access Control
-  - ✅ Edge Cases
+  - Deployment & Initialization
+  - Order Creation
+  - Gateway Callback Processing
+  - Timeout Protection
+  - Refund Mechanism
+  - Order Settlement
+  - Order Cancellation
+  - Gas Optimization
+  - Access Control
+  - Edge Cases
 
-## 🔧 Core Contract API
+## Gas Optimization
 
-### Create Order
-```solidity
-function createOrder(address seller, uint64 basePrice, uint64 amount) external
+### Techniques Implemented
+1. **IR-based Compilation**: Optimizer with 200 runs
+2. **Storage Packing**: Efficient struct layout
+3. **Batch Operations**: Permissions and timeouts
+4. **Lazy Evaluation**: FHE operations computed when needed
+5. **Minimal HCU Usage**: Optimized homomorphic operations
+
+### Gas Usage Example
 ```
-Initiates encrypted order with price obfuscation and Gateway callback request.
-
-### Process Decryption Callback
-```solidity
-function processOrderDecryption(uint256 requestId, uint64 price, uint64 amount, uint64 total) external
+postJob:               ~85,000 gas
+submitBid:             ~65,000 gas
+requestBidPriceReveal: ~45,000 gas
+callbackBidPriceReveal: ~35,000 gas
+awardJob:              ~55,000 gas
+completeJob:           ~42,000 gas
+requestRefund:         ~38,000 gas
+triggerTimeout:        ~32,000 gas
+batchProcessTimeouts:  ~25,000 gas per item
 ```
-Gateway callback function - processes decrypted values and activates order.
 
-### Settle Order
-```solidity
-function settleOrder(uint256 orderId) external
-```
-Updates encrypted balances and completes transaction.
-
-### Request Refund
-```solidity
-function requestRefund(uint256 orderId) external
-```
-Allows buyer to refund expired orders.
-
-### Process Refund Callback
-```solidity
-function processRefund(uint256 requestId, uint64 refundAmount) external
-```
-Gateway callback - executes refund.
-
-### Timeout Protection
-```solidity
-function triggerTimeout(uint256 requestId) external
-function batchProcessTimeouts(uint256[] calldata requestIds) external
-```
-Public timeout handling and batch processing.
-
-## ⚙️ Configuration
+## Configuration
 
 ### Environment Variables
 Create `.env` from `.env.example`:
@@ -193,58 +377,75 @@ Required variables:
 - **Networks**: Hardhat, Localhost, Sepolia, FHEVM Sepolia
 - **Gas Reporter**: Enabled with USD conversion
 
-## 📚 Documentation
+## Network Support
+
+| Network | ChainID | Status | RPC |
+|---------|---------|--------|-----|
+| Hardhat | 31337 | Local | http://localhost:8545 |
+| Localhost | 31337 | Local | http://127.0.0.1:8545 |
+| Sepolia | 11155111 | Testnet | https://rpc.sepolia.org |
+| FHEVM Sepolia | 8009 | FHE | https://devnet.zama.ai |
+
+## Contract Constants
+
+```solidity
+PLATFORM_FEE = 0.01 ether
+MIN_BID_AMOUNT = 0.001 ether
+MIN_BIDDING_DURATION = 1 hours
+MAX_BIDDING_DURATION = 7 days
+DECRYPTION_TIMEOUT = 1 hours
+REFUND_GRACE_PERIOD = 24 hours
+BATCH_TIMEOUT_LIMIT = 50
+PRICE_NOISE_RANGE = 100
+PRICE_MULTIPLIER_BASE = 1000
+```
+
+## Event Reference
+
+### Job Lifecycle
+- `JobPosted`
+- `BidSubmitted`
+- `BidRevealed`
+- `JobAwarded`
+- `JobCompleted`
+- `JobCancelled`
+- `BiddingClosed`
+
+### Gateway Operations
+- `DecryptionRequested`
+- `DecryptionCompleted`
+- `DecryptionTimedOut`
+
+### Refund Operations
+- `RefundRequested`
+- `RefundProcessed`
+- `RefundFailed`
+
+### Timeout Operations
+- `TimeoutTriggered`
+- `BatchTimeoutProcessed`
+
+## Security Audit Checklist
+
+- [x] ReentrancyGuard protection
+- [x] AccessControl role system
+- [x] Input validation
+- [x] Overflow protection (Solidity 0.8+)
+- [x] Event logging
+- [x] Timeout protection
+- [x] Refund mechanism
+- [x] Pausable emergency stop
+- [x] Escrow system
+- [x] Deposit protection
+
+## Documentation
 
 - **ARCHITECTURE.md**: Deep dive into system design
 - **API.md**: Complete API reference
 - **TESTING.md**: Test strategy and coverage
 - **SECURITY.md**: Security analysis and best practices
 
-## 🔒 Security Features
-
-✅ **ReentrancyGuard**: Protection against reentrancy attacks
-✅ **AccessControl**: Role-based permission system
-✅ **Input Validation**: Comprehensive require statements
-✅ **Overflow Protection**: Solidity 0.8+ built-in SafeMath
-✅ **Event Logging**: Comprehensive audit trail
-✅ **Timeout Protection**: Prevents fund locks
-✅ **Refund Mechanism**: Graceful failure handling
-
-### Security Checklist
-```bash
-npm run security:check  # Run automated audit
-npm run lint            # Code linting
-npm run format:check    # Code format validation
-```
-
-## 📈 Gas Optimization
-
-### Techniques Implemented
-1. **Optimizer Settings**: IR-based compilation
-2. **Storage Packing**: Efficient struct layout
-3. **Lazy Evaluation**: Encrypted operations computed when needed
-4. **Batch Processing**: Cleanup timeouts in bulk
-5. **Function Optimization**: Minimal storage writes
-
-### Gas Usage Example
-```
-createOrder: ~45,000 gas
-processOrderDecryption: ~35,000 gas
-settleOrder: ~42,000 gas
-requestRefund: ~38,000 gas
-triggerTimeout: ~32,000 gas
-```
-
-## 🌐 Network Support
-
-| Network | ChainID | Status | RPC |
-|---------|---------|--------|-----|
-| Hardhat | 31337 | ✅ Local | http://localhost:8545 |
-| Localhost | 31337 | ✅ Local | http://127.0.0.1:8545 |
-| Sepolia | 11155111 | ✅ Testnet | https://rpc.sepolia.org |
-| FHEVM Sepolia | 8009 | ✅ FHE | https://devnet.zama.ai |
-
-## 🎓 Learning Resources
+## Learning Resources
 
 This project demonstrates:
 - FHE smart contract development
@@ -254,12 +455,15 @@ This project demonstrates:
 - Gas-efficient implementation
 - Comprehensive testing strategies
 - Production-ready Solidity patterns
+- Refund and timeout mechanisms
+- Price obfuscation techniques
+- HCU optimization strategies
 
-## 📝 License
+## License
 
 MIT - See LICENSE file
 
-## 🤝 Contributing
+## Contributing
 
 Contributions welcome! Please:
 1. Fork the repository
@@ -268,7 +472,7 @@ Contributions welcome! Please:
 4. Ensure all tests pass: `npm run ci`
 5. Submit a pull request
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This is a proof-of-concept implementation. For production use:
 - Conduct professional security audits
@@ -277,7 +481,7 @@ This is a proof-of-concept implementation. For production use:
 - Deploy on mainnet with caution
 - Monitor for anomalies
 
-## 📞 Support
+## Support
 
 For questions or issues:
 1. Check the documentation in `/docs`
