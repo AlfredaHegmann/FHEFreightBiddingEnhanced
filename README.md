@@ -287,6 +287,5 @@ For questions or issues:
 
 ---
 
-**Last Updated**: 2025-01-15
 **Solidity Version**: ^0.8.24
 **Network**: FHEVM Sepolia
