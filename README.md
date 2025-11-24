@@ -12,6 +12,9 @@ This project implements a sophisticated privacy-preserving marketplace using Zam
 - **Privacy Techniques**: Price obfuscation and division hiding
 - **Gas Optimization**: Efficient HCU (Homomorphic Computation Unit) usage
 
+Live Demo: https://fhe-freight-bidding-enhanced.vercel.app/
+ 
+
 ## 🔐 Key Features
 
 ### 1. Gateway Callback Pattern
