@@ -6,6 +6,8 @@ A revolutionary blockchain-based freight bidding system built with Fully Homomor
 
 **Platform URL**: [https://fhe-freight-bidding-enhanced.vercel.app/](https://fhe-freight-bidding-enhanced.vercel.app/)
 
+**Video**:[https://streamable.com/8ylgfl](https://streamable.com/8ylgfl) https://streamable.com/8ylgfl
+
 **Smart Contract Address**: `0x2E7B5f277595e3F1eeB9548ef654E178537cb90E`
 
 ## Core Concepts
